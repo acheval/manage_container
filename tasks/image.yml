@@ -1,0 +1,19 @@
+---
+
+- name: Image | The image is pulled
+  containers.podman.podman_image:
+    name: "{{ manage_container__podman_image.name }}"
+    tag: "{{ manage_container__podman_image.tag }}"
+    state: "{{ manage_container__podman_image.state }}"
+
+- name: Image | Podman-auto timer is enabled
+  become_user: "{{ manage_container__container_start_items.value.hostuser }}"
+  become: true
+  ansible.builtin.systemd_service:
+    name: podman-auto-update.timer
+    enabled: true
+    state: started
+    scope: user
+  loop: "{{ manage_container__config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__container_start_items

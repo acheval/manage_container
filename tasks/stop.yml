@@ -1,0 +1,22 @@
+---
+
+- name: Stop | Container is stopped
+  become_user: "{{ manage_container__stop_items.value.hostuser }}"
+  become: true
+  ansible.builtin.systemd_service:
+    name: "{{ manage_container__stop_items.value.service_name }}"
+    state: stopped
+    scope: user
+  loop: "{{ manage_container__config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__stop_items
+
+- name: Stop | Wait for Container to come down
+  ansible.builtin.wait_for:
+    port: "{{ manage_container__ports_items.value }}"
+    delay: 5
+    sleep: 1
+    state: stopped
+  loop: "{{ manage_container__ports }}"
+  loop_control:
+    loop_var: manage_container__ports_items

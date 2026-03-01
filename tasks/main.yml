@@ -1,0 +1,6 @@
+---
+
+- name: Containers | Calling requested action
+  ansible.builtin.import_tasks:
+    file: "{{ manage_container__action }}.yml"
+  when: manage_container__action is defined

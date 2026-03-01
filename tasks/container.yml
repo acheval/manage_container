@@ -1,0 +1,53 @@
+---
+
+- name: Container | Container image is configured
+  ansible.builtin.include_tasks:
+    file: image.yml
+
+- name: Container | Container is configured
+  become_user: "{{ manage_container__config_items.value.hostuser }}"
+  become: true
+  containers.podman.podman_container:
+    name: "{{ manage_container__config_items.value.name }}"
+    image: "{{ manage_container__config_items.value.image }}"
+    state: "{{ manage_container__config_items.value.state }}"
+    device: "{{ manage_container__config_items.value.device | default(omit) }}"
+    hostuser: "{{ manage_container__config_items.value.hostuser }}"
+    hostname: "{{ manage_container__config_items.value.hostname }}"
+    userns: "{{ manage_container__config_items.value.userns }}"
+    group_add: "{{ manage_container__config_items.value.group_add }}"
+    rm: "{{ manage_container__config_items.value.rm }}"
+    label: "{{ manage_container__config_items.value.label }}"
+    publish: "{{ manage_container__config_items.value.publish }}"
+    volume: "{{ manage_container__config_items.value.volume }}"
+    generate_systemd:
+      container_prefix: "{{ manage_container__config_items.value.generate_systemd.container_prefix }}"
+      path: "{{ manage_container__config_items.value.generate_systemd.path }}"
+      restart_policy: "{{ manage_container__config_items.value.generate_systemd.restart_policy }}"
+      new: "{{ manage_container__config_items.value.generate_systemd.new }}"
+  register: manage_container__config_items_output
+  loop: "{{ manage_container__config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__config_items
+
+- name: Container | Reload systemd
+  become_user: "{{ manage_container__reload_items.value.hostuser }}"
+  become: true
+  when: manage_container__config_items_output.changed
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+  loop: "{{ manage_container__config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__reload_items
+
+- name: Container | Container service is configured
+  become_user: "{{ manage_container__start_items.value.hostuser }}"
+  become: true
+  ansible.builtin.systemd_service:
+    name: "{{ manage_container__start_items.value.service_name }}"
+    enabled: "{{ manage_container__start_items.value.enabled }}"
+    scope: user
+  loop: "{{ manage_container__config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__start_items
