@@ -1,0 +1,14 @@
+{% set quadlets = manage_jellyfin__quadlet_config | dict2items %}
+{% for quadlet in quadlets -%}
+{% for stanzas,params in quadlet.value.container.items() -%}
+[{{ stanzas }}]
+{% for parameter,argument in params.items() -%}
+{% if argument is iterable and (argument is not string and argument is not mapping) -%}
+{% for item in argument -%}
+{{ parameter }}={{ item }}
+{% endfor -%}
+{% else -%}
+{{ parameter }}={{ argument }}
+{% endif -%}
+{% endfor %}
+{% endfor -%}

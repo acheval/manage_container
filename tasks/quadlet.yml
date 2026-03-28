@@ -1,0 +1,30 @@
+---
+
+- name: Quadlet | Quadlet Container is configured
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.container.j2
+    dest: 
+
+- name: Quadlet | Quadlet Image is configured
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.image.j2
+
+- name: Quadlet | Quadlet Network is configured
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.network.j2
+
+- name: Quadlet | Quadlet Volume is configured
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.volume.j2
+
+- name: Quadlet | Quadlet is configured
+  become_user: "{{ manage_container__config_items.value.hostuser }}"
+  become: true
+  containers.podman.podman_quadlet:
+    all: "{{ manage_container__config_items.value.all | default(omit) }}"
+    debug: "{{ manage_container__config_items.value.debug | default(false) }}"
+    name: "{{ manage_container__config_items.value.name }}"
+    reload_systemd: "{{ manage_container__config_items.value.reload_systemd | default(true) }}"
+    src: "{{ manage_container__config_items.value.src }}"
+    state: "{{ manage_container__config_items.value.state }}"
+
