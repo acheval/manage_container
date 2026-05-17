@@ -1,0 +1,5 @@
+{% set image = manage_container__quadlet_config_image %}
+[Image]
+{% for key,value in image.items() %}
+{{ key }}={{ value }}
+{% endfor %}

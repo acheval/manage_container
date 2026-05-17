@@ -1,7 +1,6 @@
-{% set container = manage_container__quadlet_config_container %}
-{% for stanzas,params in container.items() +%}
-[{{ stanzas }}]
-{% for parameter,argument in params.items() %}
+{% set pod = manage_container__quadlet_config_pod %}
+[Pod]
+{% for parameter,argument in pod.items() %}
 {% if argument is iterable and (argument is not string and argument is not mapping) %}
 {% for item in argument %}
 {{ parameter }}={{ item }}
@@ -9,5 +8,4 @@
 {% else %}
 {{ parameter }}={{ argument }}
 {% endif %}
-{% endfor %}
 {% endfor %}

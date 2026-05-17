@@ -1,9 +1,5 @@
-{% set quadlets = manage_containers__quadlet_config | dict2items %}
-{% for quadlet in quadlets %}
-{% for stanzas,params in quadlet.value.volumes.items() -%}
+{% set volume = manage_container__quadlet_config_volumes_items %}
 [Volume]
-{% for parameter,argument in params.items() -%}
-{{ parameter }}={{ argument }}
-{% endfor -%}
-{% endfor -%}
+{% for key,value in volume.items() %}
+{{ key }}={{ value }}
 {% endfor -%}
