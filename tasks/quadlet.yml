@@ -109,14 +109,3 @@
     name: "{{ manage_container__quadlet.name }}"
     scope: user
     state: "{{ manage_container__quadlet.state | default('started')}}"
-
-# - name: Quadlet | Quadlet is configured
-#   become_user: "{{ manage_container__quadlet.user }}"
-#   become: true
-#   containers.podman.podman_quadlet:
-#     all: "{{ manage_container__config_items.value.all | default(omit) }}"
-#     debug: "{{ manage_container__config_items.value.debug | default(false) }}"
-#     name: "{{ manage_container__quadlet_config.name }}"
-#     reload_systemd: "{{ manage_container__config_items.value.reload_systemd | default(true) }}"
-#     src: "{{ manage_container__quadlet_config.src }}"
-#     state: "{{ manage_container__quadlet_config.state | default('present') }}"
