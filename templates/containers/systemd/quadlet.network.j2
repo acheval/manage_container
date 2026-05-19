@@ -1,0 +1,8 @@
+{% set network = manage_container__quadlet_config_network %}
+{% for key,value in network.items() %}
+[Unit]
+Description=""
+
+[Network]
+{{ key }}={{ value }}
+{% endfor %}

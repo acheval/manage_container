@@ -1,0 +1,22 @@
+---
+
+- name: Stop | Quadlet is stopped
+  become_user: "{{ manage_container__stop_items.value.quadlet.user }}"
+  become: true
+  ansible.builtin.systemd_service:
+    name: "{{ manage_container__stop_items.value.quadlet.service_name }}"
+    state: stopped
+    scope: user
+  loop: "{{ manage_container__quadlet_config | dict2items }}"
+  loop_control:
+    loop_var: manage_container__stop_items
+
+- name: Stop | Wait for Quadlet to come down
+  ansible.builtin.wait_for:
+    port: "{{ manage_container__ports_items.value }}"
+    delay: 5
+    sleep: 1
+    state: stopped
+  loop: "{{ manage_container__ports }}"
+  loop_control:
+    loop_var: manage_container__ports_items

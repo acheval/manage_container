@@ -1,0 +1,111 @@
+---
+
+- name: Quadlet | Quadlet facts are created
+  ansible.builtin.set_fact:
+    manage_container__quadlet:
+      src: "{{ manage_container__quadlet_config.value.quadlet.directory }}"
+      user: "{{ manage_container__quadlet_config.value.quadlet.user }}"
+      group: "{{ manage_container__quadlet_config.value.quadlet.group }}"
+      mode_dir: "{{ manage_container__quadlet_config.value.quadlet.mode_dir }}"
+      mode_file: "{{ manage_container__quadlet_config.value.quadlet.mode_file }}"
+      name: "{{ manage_container__quadlet_config.key }}"
+    manage_container__quadlet_config_container: "{{ manage_container__quadlet_config.value.container }}"
+    manage_container__quadlet_config_image: "{{ manage_container__quadlet_config.value.image | default(omit) }}"
+    manage_container__quadlet_config_network: "{{ manage_container__quadlet_config.value.network | default(omit) }}"
+    manage_container__quadlet_config_pod: "{{ manage_container__quadlet_config.value.pod | default(omit) }}"
+    manage_container__quadlet_config_volumes: "{{ manage_container__quadlet_config.value.volumes | default(omit) }}"
+
+- name: Quadlet | Quadlet directory is present
+  ansible.builtin.file:
+    path: "{{ manage_container__quadlet.src }}"
+    state: directory
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_dir }}"
+
+- name: "Quadlet | Quadlet Container is configured: {{ manage_container__quadlet.name }}"
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.container.j2
+    dest: "{{ manage_container__quadlet.src }}/{{ manage_container__quadlet.name }}.container"
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_file }}"
+  register: manage_container__quadlet_config_container_output
+
+- name: "Quadlet | Quadlet Image is configured: {{ manage_container__quadlet.name }}"
+  when: manage_container__quadlet_config_image is defined
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.image.j2
+    dest: "{{ manage_container__quadlet.src }}/{{ manage_container__quadlet.name }}.image"
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_file }}"
+  register: manage_container__quadlet_config_image_output
+
+- name: "Quadlet | Quadlet Network is configured: {{ manage_container__quadlet.name }}"
+  when: manage_container__quadlet_config_network is defined
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.network.j2
+    dest: "{{ manage_container__quadlet.src }}/{{ manage_container__quadlet.name }}.network"
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_file }}"
+  register: manage_container__quadlet_config_network_output
+
+- name: "Quadlet | Quadlet Pod is configured: {{ manage_container__quadlet.name }}"
+  when: manage_container__quadlet_config_pod is defined
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.pod.j2
+    dest: "{{ manage_container__quadlet.src }}/{{ manage_container__quadlet.name }}.pod"
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_file }}"
+  register: manage_container__quadlet_config_pod_output
+
+- name: "Quadlet | Quadlet Volume is configured"
+  when: manage_container__quadlet_config_volumes is defined
+  ansible.builtin.template:
+    src: templates/containers/systemd/quadlet.volume.j2
+    dest: "{{ manage_container__quadlet.src }}/{{ manage_container__quadlet_config_volumes_items.VolumeName }}.volume"
+    owner: "{{ manage_container__quadlet.user }}"
+    group: "{{ manage_container__quadlet.group }}"
+    mode: "{{ manage_container__quadlet.mode_file }}"
+  loop: "{{ manage_container__quadlet_config_volumes }}"
+  loop_control:
+    loop_var: manage_container__quadlet_config_volumes_items
+    label: "{{ manage_container__quadlet_config_volumes_items.VolumeName }}"
+  register: manage_container__quadlet_config_volumes_output
+
+- name: Quadlet | Quadlet configuration is validated
+  become: true
+  become_user: "{{ manage_container__quadlet.user }}"
+  ansible.builtin.command:
+    cmd: /usr/lib/systemd/system-generators/podman-system-generator --user --dryrun
+  register: manage_container__quadlet_validate_output
+  changed_when: false
+  failed_when: manage_container__quadlet_validate_output.rc != 0
+
+- name: Quadlet | Reload systemd
+  become_user: "{{ manage_container__quadlet.user }}"
+  become: true
+  when:
+    manage_container__quadlet_config_container_output.changed
+    or
+    manage_container__quadlet_config_image_output.changed
+    or
+    manage_container__quadlet_config_volumes_output.changed
+    or
+    manage_container__quadlet_config_network_output.changed
+    or
+    manage_container__quadlet_config_pod_output.changed
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+
+- name: Quadlet | Quadlet service is configured
+  become_user: "{{ manage_container__quadlet.user }}"
+  become: true
+  ansible.builtin.systemd_service:
+    name: "{{ manage_container__quadlet.name }}"
+    scope: user
+    state: "{{ manage_container__quadlet.state | default('started')}}"

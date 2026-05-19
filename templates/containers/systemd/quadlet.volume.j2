@@ -1,0 +1,5 @@
+{% set volume = manage_container__quadlet_config_volumes_items %}
+[Volume]
+{% for key,value in volume.items() %}
+{{ key }}={{ value }}
+{% endfor -%}
