@@ -96,6 +96,8 @@
     manage_container__quadlet_config_volumes_output.changed
     or
     manage_container__quadlet_config_network_output.changed
+    or
+    manage_container__quadlet_config_pod_output.changed
   ansible.builtin.systemd_service:
     daemon_reload: true
     scope: user
